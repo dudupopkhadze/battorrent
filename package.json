@@ -2,9 +2,9 @@
   "name": "battorrent",
   "version": "1.0.0",
   "description": "Batman handling Torrent",
-  "main": "index.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/main.js"
   },
   "type": "module",
   "repository": {
