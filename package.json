@@ -1,0 +1,23 @@
+{
+  "name": "battorrent",
+  "version": "1.0.0",
+  "description": "Batman handling Torrent",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dudupopkhadze/battorrent.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dudupopkhadze/battorrent/issues"
+  },
+  "homepage": "https://github.com/dudupopkhadze/battorrent#readme",
+  "dependencies": {
+    "bencode": "^4.0.0"
+  }
+}
