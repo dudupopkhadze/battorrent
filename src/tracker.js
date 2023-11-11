@@ -5,17 +5,28 @@ import { genId } from "./utils.js";
 
 export const getPeers = (torrent, callback) => {
   const socket = dgram.createSocket("udp4");
-  const url = torrent.announce.toString("utf8");
+
+  const urls = torrent["announce-list"].map((v) =>
+    Buffer.from(v[0]).toString("utf8")
+  );
+
+  const url = urls[2];
 
   sendUdpMessage(socket, buildConnReq(), url);
 
-  socket.on("message", (resp) => messageHandler(resp, socket, url, callback));
+  socket.on("message", (resp) =>
+    messageHandler(resp, socket, url, torrent, callback)
+  );
 };
 
-const messageHandler = (resp, socket, url, cb) => {
+const messageHandler = (resp, socket, url, torrent, cb) => {
+  console.log(respType(resp));
   if (respType(resp) === "connect") {
     const connectionResponse = parseConnResp(resp);
-    const announceRequest = buildAnnounceReq(connectionResponse.connectionId);
+    const announceRequest = buildAnnounceReq(
+      connectionResponse.connectionId,
+      torrent
+    );
     sendUdpMessage(socket, announceRequest, url);
   } else if (respType(resp) === "announce") {
     const announceResponse = parseAnnounceResp(resp);
@@ -29,7 +40,9 @@ const sendUdpMessage = (socket, message, rawUrl, cb) => {
 };
 
 const respType = (resp) => {
-  // ...
+  const action = resp.readUInt32BE(0);
+  if (action === 0) return "connect";
+  if (action === 1) return "announce";
 };
 
 const buildConnReq = () => {
@@ -55,27 +68,27 @@ const buildAnnounceReq = (connId, torrent, port = 6881) => {
   const buffer = Buffer.allocUnsafe(98);
 
   // connection id
-  connId.copy(buf, 0);
+  connId.copy(buffer, 0);
   // action
   buffer.writeUInt32BE(1, 8);
   // transaction id
-  crypto.randomBytes(4).copy(buf, 12);
+  crypto.randomBytes(4).copy(buffer, 12);
   // info hash
-  parser.infoHash(torrent).copy(buf, 16);
+  parser.infoHash(torrent).copy(buffer, 16);
   // peerId
-  genId().copy(buf, 36);
+  genId().copy(buffer, 36);
   // downloaded
-  Buffer.alloc(8).copy(buf, 56);
+  Buffer.alloc(8).copy(buffer, 56);
   // left
-  parser.size(torrent).copy(buf, 64);
+  parser.size(torrent).copy(buffer, 64);
   // uploaded
-  Buffer.alloc(8).copy(buf, 72);
+  Buffer.alloc(8).copy(buffer, 72);
   // event
   buffer.writeUInt32BE(0, 80);
   // ip address
   buffer.writeUInt32BE(0, 80);
   // key
-  crypto.randomBytes(4).copy(buf, 88);
+  crypto.randomBytes(4).copy(buffer, 88);
   // num want
   buffer.writeInt32BE(-1, 92);
   // port
