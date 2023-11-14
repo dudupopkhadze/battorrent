@@ -1,7 +1,6 @@
-import { getPeers } from "./tracker.js";
+import { download } from "./download.js";
 import * as tkparser from "./parser.js";
 
-const torrent = tkparser.open("test.torrent");
-getPeers(torrent, (peers) => {
-  console.log("list of peers: ", peers);
-});
+const torrent = tkparser.open(process.argv[2] ?? "test.torrent");
+
+download(torrent);
