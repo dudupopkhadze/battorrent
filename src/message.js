@@ -1,6 +1,25 @@
 import Buffer from "buffer";
 import torrentParser from "./torrent-parser.js";
 
+export const parse = (message) => {
+  const id = message.length > 4 ? message.readInt8(4) : null;
+  let payload = message.length > 5 ? message.slice(5) : null;
+  if (id === 6 || id === 7 || id === 8) {
+    const rest = payload.slice(8);
+    payload = {
+      index: payload.readInt32BE(0),
+      begin: payload.readInt32BE(4),
+    };
+    payload[id === 7 ? "block" : "length"] = rest;
+  }
+
+  return {
+    size: message.readInt32BE(0),
+    id: id,
+    payload: payload,
+  };
+};
+
 export const buildHandshake = (torrent) => {
   const buf = Buffer.alloc(68);
   // pstrlen
