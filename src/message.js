@@ -1,24 +1,6 @@
-import Buffer from "buffer";
-import torrentParser from "./torrent-parser.js";
-
-export const parse = (message) => {
-  const id = message.length > 4 ? message.readInt8(4) : null;
-  let payload = message.length > 5 ? message.slice(5) : null;
-  if (id === 6 || id === 7 || id === 8) {
-    const rest = payload.slice(8);
-    payload = {
-      index: payload.readInt32BE(0),
-      begin: payload.readInt32BE(4),
-    };
-    payload[id === 7 ? "block" : "length"] = rest;
-  }
-
-  return {
-    size: message.readInt32BE(0),
-    id: id,
-    payload: payload,
-  };
-};
+import { Buffer } from "buffer";
+import * as torrentParser from "./parser.js";
+import * as util from "./utils.js";
 
 export const buildHandshake = (torrent) => {
   const buf = Buffer.alloc(68);
@@ -32,7 +14,7 @@ export const buildHandshake = (torrent) => {
   // info hash
   torrentParser.infoHash(torrent).copy(buf, 28);
   // peer id
-  buf.write(util.genId());
+  util.genId().copy(buf, 48);
   return buf;
 };
 
@@ -86,7 +68,7 @@ export const buildHave = (payload) => {
 };
 
 export const buildBitfield = (bitfield) => {
-  const buf = Buffer.alloc(14);
+  const buf = Buffer.alloc(bitfield.length + 1 + 4);
   // length
   buf.writeUInt32BE(payload.length + 1, 0);
   // id
@@ -150,4 +132,23 @@ export const buildPort = (payload) => {
   // listen-port
   buf.writeUInt16BE(payload, 5);
   return buf;
+};
+
+export const parse = (msg) => {
+  const id = msg.length > 4 ? msg.readInt8(4) : null;
+  let payload = msg.length > 5 ? msg.slice(5) : null;
+  if (id === 6 || id === 7 || id === 8) {
+    const rest = payload.slice(8);
+    payload = {
+      index: payload.readInt32BE(0),
+      begin: payload.readInt32BE(4),
+    };
+    payload[id === 7 ? "block" : "length"] = rest;
+  }
+
+  return {
+    size: msg.readInt32BE(0),
+    id: id,
+    payload: payload,
+  };
 };

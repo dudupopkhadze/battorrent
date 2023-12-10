@@ -20,7 +20,6 @@ export const getPeers = (torrent, callback) => {
 };
 
 const messageHandler = (resp, socket, url, torrent, cb) => {
-  console.log(respType(resp));
   if (respType(resp) === "connect") {
     const connectionResponse = parseConnResp(resp);
     const announceRequest = buildAnnounceReq(
